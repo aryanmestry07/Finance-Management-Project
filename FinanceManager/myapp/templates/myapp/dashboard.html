@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Finance Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        .category-badge {
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-3">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{% url 'index' %}">Finance Manager</a>
+        <div class="d-flex">
+            <a href="{% url 'finance_manager' %}" class="btn btn-primary me-2">💰 Expense Manager</a>
+            <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Dashboard Content -->
+<div class="container mt-5">
+    <h1 class="display-4 fw-bold text-center">Welcome, {{ user.username }} 🎉</h1>
+    <p class="lead text-center text-muted">This is your personal dashboard. Use the Expense Manager to track and manage your finances.</p>
+
+    <!-- Stats Cards -->
+    <div class="row text-center mt-5 g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm p-4">
+                <h4>Total Expenses</h4>
+                <p class="fw-bold text-primary fs-4">₹{{ total_expense|default:"0" }}</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm p-4">
+                <h4>Categories</h4>
+                <p class="fw-bold text-success fs-4">{{ categories|length }} Tracked</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm p-4">
+                <h4>Status</h4>
+                <p class="fw-bold text-info fs-4">Active</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Categories -->
+    <div class="row mt-5 g-4 justify-content-center">
+        {% for cat in categories %}
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 text-center">
+                <h5 class="fw-bold">{{ cat.category }}</h5>
+                <span class="badge bg-primary category-badge">₹{{ cat.total }}</span>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted mt-3">No expenses added yet. Use the Expense Manager to start tracking!</p>
+        {% endfor %}
+    </div>
+</div>
+
+</body>
+</html>
