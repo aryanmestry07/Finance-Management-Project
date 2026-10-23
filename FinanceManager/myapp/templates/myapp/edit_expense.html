@@ -1,44 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Expense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+{% extends "myapp/index.html" %}
 
+{% block title %}Edit Expense{% endblock %}
+
+{% block styles %}
+<style>
+    /* The body background (#f8f9fa) is inherited from index.html.
+      We just need the glass card styles.
+    */
+
+    /* Glassmorphism Card Style (Adjusted for light background) */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.65); 
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.1); 
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-title {
+        color: #212529; /* Dark text for readability on glass */
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #343a40;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
 <div class="container mt-5">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h3 class="card-title text-center mb-4">Edit Expense</h3>
-            <form method="POST">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label">Expense Name</label>
-                    <input type="text" class="form-control" name="expense_name" value="{{ expense.name }}" required>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="card-title text-center mb-4">Edit Expense</h3>
+                    
+                    <form method="POST" action="{% url 'edit_expense' expense.id %}">
+                        {% csrf_token %}
+                        
+                        <input type="hidden" name="referrer" value="{{ referrer }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Expense Name</label>
+                            <input type="text" class="form-control" name="expense_name" value="{{ expense.name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Amount (₹)</label>
+                            <input type="number" class="form-control" name="amount" value="{{ expense.amount }}" step="0.01" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category" required>
+                                {% for cat in user_categories %}
+                                    <option value="{{ cat.id }}" {% if expense.category.id == cat.id %}selected{% endif %}>
+                                        {{ cat.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" name="date" value="{{ expense.date|date:'Y-m-d' }}" required>
+                        </div>
+
+                        <div class="text-center d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" style="background-color: #20c997; border: none;">Save Changes</button>
+                            <a href="{{ referrer|default_if_none:'/' }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Amount</label>
-                    <input type="number" class="form-control" name="amount" value="{{ expense.amount }}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Category</label>
-                    <select class="form-select" name="category" required>
-                        <option value="Shopping" {% if expense.category == "Shopping" %}selected{% endif %}>Shopping</option>
-                        <option value="Food" {% if expense.category == "Food" %}selected{% endif %}>Food</option>
-                        <option value="Transport" {% if expense.category == "Transport" %}selected{% endif %}>Transport</option>
-                        <option value="Others" {% if expense.category == "Others" %}selected{% endif %}>Others</option>
-                    </select>
-                </div>
-                <div class="text-center">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <a href="{% url 'index' %}" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
-
-</body>
-</html>
+{% endblock %}

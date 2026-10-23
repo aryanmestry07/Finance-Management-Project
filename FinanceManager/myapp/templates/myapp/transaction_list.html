@@ -1,0 +1,162 @@
+{% extends "myapp/index.html" %}
+{% load static %}
+
+{% block title %}All Transactions{% endblock %}
+
+{% block styles %}
+<style>
+    /* REMOVED the body background gradient rule. */
+    /* It will now inherit the #f8f9fa from the base template. */
+
+    /* Glassmorphism Card Style (Adjusted for light background) */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.65); /* Slightly less transparent */
+        backdrop-filter: blur(10px); /* Slightly less blur */
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 16px;
+        /* Adjusted border for light background */
+        border: 1px solid rgba(0, 0, 0, 0.1); 
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Softer shadow */
+    }
+
+    /* *** UPDATED: Text colors for LIGHT background *** */
+    .hero h1, .hero p {
+        color: #212529; /* Dark text */
+        text-shadow: none; /* Remove shadow */
+    }
+    .hero p {
+        color: #6c757d !important; /* Standard muted color */
+    }
+
+    /* Table styles for glass on light background */
+    .table {
+        color: #212529;
+    }
+    .table th {
+        color: #343a40;
+    }
+    .table tr {
+        /* Adjusted border */
+        border-color: rgba(0, 0, 0, 0.1); 
+    }
+    .table > :not(caption) > * > * {
+        background-color: transparent; 
+    }
+    /* Adjusted table header background */
+    .table thead.table-light { 
+        background-color: rgba(0, 0, 0, 0.03) !important; /* Subtle light grey */
+    }
+
+
+    /* Modal content is unchanged (still white) */
+    .modal-content {
+        background: #fff;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container hero text-center mt-4"> 
+    <h1>All Transactions</h1>
+    <p>A complete history of your spending 💸</p>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body p-4">
+                    {% if category_details %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light"> 
+                                <tr>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col" class="text-end">Amount</th>
+                                    <th scope="col" class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cat_data in category_details %}
+                                    {% for exp in cat_data.expenses %}
+                                    <tr>
+                                        <td>{{ exp.date|date:"d M, Y" }}</td>
+                                        <td class="fw-bold">{{ exp.name }}</td>
+                                        <td>
+                                            <span class="badge" style="background-color:  #20c997;">{{ exp.category.name|default:"Uncategorized" }}</span>
+                                        </td>
+                                        <td class="fw-bold text-danger text-end">-₹{{ exp.amount }}</td>
+                                        <td class="text-end">
+                                            <a href="{% url 'edit_expense' exp.id %}" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </a>
+                                            <a href="{% url 'delete_expense' exp.id %}" class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Are you sure?');">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-secondary fs-5 m-3">No expenses yet. Click "Add Expense" in the navbar to start tracking.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #20c997;">
+                <h5 class="modal-title" id="addExpenseModalLabel" >Add a New Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <form action="{% url 'transaction_list' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="expenseName" class="form-label">Expense Name</label>
+                        <input type="text" class="form-control" id="expenseName" name="expense_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expenseAmount" class="form-label">Amount (₹)</label>
+                        <input type="number" class="form-control" id="expenseAmount" name="amount" step="0.01" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="expenseCategory" class="form-label">Category</label>
+                        <select class="form-select" id="expenseCategory" name="category" required>
+                            <option value="" disabled selected>Select a category</option>
+                            {% for cat in user_categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="expenseDate" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="expenseDate" name="date" value="{{ expense_date|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="d-grid" >
+                        <button type="submit" class="btn btn-primary" style="background-color: #20c997; border:none;" >Save Expense</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

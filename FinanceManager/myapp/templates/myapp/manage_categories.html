@@ -1,0 +1,168 @@
+{% extends "myapp/index.html" %}
+
+{% block title %}Manage Categories{% endblock %}
+
+{% block styles %}
+<style>
+    /* REMOVED the body background gradient rule. */
+    /* It will now inherit the #f8f9fa from the base template. */
+
+    /* Glassmorphism Card Style (Adjusted for light background) */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.65); /* Slightly less transparent */
+        backdrop-filter: blur(10px); /* Slightly less blur */
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 16px;
+        /* Adjusted border for light background */
+        border: 1px solid rgba(0, 0, 0, 0.1); 
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Softer shadow */
+    }
+
+    /* *** UPDATED: Text colors for LIGHT background *** */
+    h3 {
+        color: #212529; /* Dark text */
+        text-shadow: none; /* Remove shadow */
+    }
+    .card-title {
+        color: #212529;
+        font-weight: 600;
+    }
+    .form-label {
+        font-weight: 500;
+        color: #343a40;
+    }
+
+    /* List group items for glass on light background */
+    .list-group-item {
+       background-color: transparent;
+       border: none;
+       /* Adjusted border */
+       border-bottom: 1px solid rgba(0, 0, 0, 0.08); 
+       padding: 0.9rem 1.25rem;
+    }
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    .list-group-item .fw-bold {
+        color: #212529;
+    }
+
+    /* Styled alerts for the light theme */
+    .alert {
+        border: none;
+        color: #fff; /* Keep text white */
+    }
+    .alert-success {
+        /* Slightly less transparent */
+        background-color: rgba(21, 157, 101, 0.85); 
+    }
+    .alert-danger {
+        /* Slightly less transparent */
+        background-color: rgba(220, 53, 69, 0.85); 
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4 mb-4 mb-md-0"> 
+            <div class="card stat-card shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-center">Add New Category</h5>
+                    <form method="POST" action="{% url 'manage_categories' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="category_name" class="form-label">Category Name</label>
+                            <input type="text" class="form-control" name="category_name" id="category_name" required>
+                        </div>
+                       <button type="submit" class="btn w-100" style="background-color: #20c997; color: white; border: none;">Add Category</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h3 class="mb-3 text-center">Your Categories</h3> 
+            
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}" role="alert">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+
+            <div class="card stat-card shadow-sm">
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for category in categories %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">{{ category.name }}</span>
+                                <span>
+                                    <a href="{% url 'edit_category' category.id %}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil-fill"></i> Edit
+                                    </a>
+                                    <form action="{% url 'delete_category' category.id %}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure? This will set expenses in this category to \'Uncategorized\'.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash-fill"></i> Delete
+                                        </button>
+                                    </form>
+                                </span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-secondary text-center p-3">You haven't added any categories yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #20c997;">
+                <h5 class="modal-title" id="addExpenseModalLabel" >Add a New Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <form action="{% url 'index' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="expenseName" class="form-label">Expense Name</label>
+                        <input type="text" class="form-control" id="expenseName" name="expense_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expenseAmount" class="form-label">Amount (₹)</label>
+                        <input type="number" class="form-control" id="expenseAmount" name="amount" step="0.01" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="expenseCategory" class="form-label">Category</label>
+                        <select class="form-select" id="expenseCategory" name="category" required>
+                            <option value="" disabled selected>Select a category</option>
+                            {% for cat in user_categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="expenseDate" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="expenseDate" name="date" value="{{ expense_date|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="d-grid" >
+                        <button type="submit" class="btn btn-primary" style="background-color: #20c997; border:none;" >Save Expense</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
